@@ -5,6 +5,7 @@ include $(CLEAR_VARS)
 
 libext4_utils_src_files := \
 	make_ext4fs.c \
+        ext4fixup.c \
         ext4_utils.c \
         allocate.c \
         backed_block.c \
@@ -14,14 +15,15 @@ libext4_utils_src_files := \
         indirect.c \
         uuid.c \
         sha1.c \
-	sparse_crc32.c
+	sparse_crc32.c \
+	wipe.c
 
 LOCAL_SRC_FILES := $(libext4_utils_src_files)
 LOCAL_MODULE := libext4_utils
 LOCAL_MODULE_TAGS := optional
 LOCAL_C_INCLUDES += external/zlib
 LOCAL_SHARED_LIBRARIES := libz
-LOCAL_PRELINK_MODULE := false
+
 
 include $(BUILD_SHARED_LIBRARY)
 
@@ -32,7 +34,7 @@ LOCAL_MODULE := libext4_utils
 LOCAL_MODULE_TAGS := optional
 LOCAL_C_INCLUDES += external/zlib
 LOCAL_STATIC_LIBRARIES := libz
-LOCAL_PRELINK_MODULE := false
+
 
 include $(BUILD_STATIC_LIBRARY)
 
@@ -64,9 +66,60 @@ include $(BUILD_HOST_EXECUTABLE)
 
 include $(CLEAR_VARS)
 
+LOCAL_SRC_FILES := ext2simg.c
+LOCAL_MODULE := ext2simg
+LOCAL_MODULE_TAGS := optional
+LOCAL_SHARED_LIBRARIES += libext4_utils libz
+
+include $(BUILD_EXECUTABLE)
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := ext2simg.c
+LOCAL_MODULE := ext2simg
+LOCAL_MODULE_TAGS := optional
+LOCAL_STATIC_LIBRARIES += libext4_utils libz
+
+include $(BUILD_HOST_EXECUTABLE)
+
+include $(CLEAR_VARS)
+
 LOCAL_SRC_FILES := simg2img.c \
 	sparse_crc32.c
 LOCAL_MODULE := simg2img
+
+include $(BUILD_HOST_EXECUTABLE)
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := simg2img.c \
+	sparse_crc32.c
+LOCAL_MODULE := simg2img
+
+include $(BUILD_EXECUTABLE)
+
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES := setup_fs.c
+LOCAL_MODULE := setup_fs
+LOCAL_MODULE_TAGS := optional
+LOCAL_SHARED_LIBRARIES += libcutils
+include $(BUILD_EXECUTABLE)
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := ext4fixup_main.c
+LOCAL_MODULE := ext4fixup
+LOCAL_MODULE_TAGS := optional
+LOCAL_SHARED_LIBRARIES += libext4_utils libz
+
+include $(BUILD_EXECUTABLE)
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := ext4fixup_main.c
+LOCAL_MODULE := ext4fixup
+LOCAL_MODULE_TAGS := optional
+LOCAL_STATIC_LIBRARIES += libext4_utils libz
 
 include $(BUILD_HOST_EXECUTABLE)
 

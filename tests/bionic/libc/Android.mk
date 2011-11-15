@@ -61,6 +61,10 @@ endef
 # First, the tests in 'common'
 
 sources := \
+    common/test_clock.c \
+    common/test_cpu_set.c \
+    common/test_drand48.c \
+    common/test_executable_destructor.c \
     common/test_getaddrinfo.c \
     common/test_gethostbyname.c \
     common/test_gethostname.c \
@@ -68,12 +72,14 @@ sources := \
     common/test_pthread_getcpuclockid.c \
     common/test_pthread_join.c \
     common/test_pthread_mutex.c \
+    common/test_pthread_rwlock.c \
     common/test_pthread_once.c \
     common/test_semaphore.c \
     common/test_sem_post.c \
     common/test_seteuid.c \
     common/test_static_cpp_mutex.cpp \
     common/test_strftime_2039.c \
+    common/test_strptime.c \
     common/test_tm_zone.c \
     common/test_udp.c \
 
@@ -83,6 +89,24 @@ EXTRA_LDLIBS := -lpthread -lrt
 EXTRA_CFLAGS := -D_XOPEN_SOURCE=600 -DHOST
 $(call host-test, $(sources))
 $(call device-test, $(sources))
+
+# The 'test_static_executable_destructor is the same than
+# test_executable_destructor except that the generated program
+# is statically linked instead.
+include $(CLEAR_VARS)
+LOCAL_MODULE := test_static_executable_destructor
+LOCAL_SRC_FILES := common/test_executable_destructor.c
+LOCAL_MODULE_TAGS := tests
+LOCAL_STATIC_LIBRARIES := libc
+LOCAL_FORCE_STATIC_EXECUTABLE := true
+include $(BUILD_EXECUTABLE)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := test_static_executable_destructor
+LOCAL_SRC_FILES := common/test_executable_destructor.c
+LOCAL_MODULE_TAGS := tests
+LOCAL_LDFLAGS := -static
+include $(BUILD_HOST_EXECUTABLE)
 
 # The 'test_dlopen_null' tests requires specific linker flags
 #
@@ -119,6 +143,7 @@ sources :=  \
     bionic/test_netinet_icmp.c \
     bionic/test_pthread_cond.c \
     bionic/test_pthread_create.c \
+    bionic/test_setjmp.c \
 
 $(call device-test, $(sources))
 
@@ -146,13 +171,15 @@ $(call device-test, $(sources))
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := bionic/lib_relocs.c
 LOCAL_MODULE    := libtest_relocs
-LOCAL_PRELINK_MODULE := false
+
+LOCAL_MODULE_TAGS := tests
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := bionic/test_relocs.c
 LOCAL_MODULE    := test_relocs
 LOCAL_SHARED_LIBRARIES := libtest_relocs
+LOCAL_MODULE_TAGS := tests
 include $(BUILD_EXECUTABLE)
 
 # This test tries to see if the static constructors in a
@@ -163,13 +190,15 @@ include $(BUILD_EXECUTABLE)
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := bionic/lib_static_init.cpp
 LOCAL_MODULE    := libtest_static_init
-LOCAL_PRELINK_MODULE := false
+
+LOCAL_MODULE_TAGS := tests
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := bionic/test_static_init.cpp
 LOCAL_MODULE    := test_static_init
 LOCAL_SHARED_LIBRARIES := libtest_static_init
+LOCAL_MODULE_TAGS := tests
 include $(BUILD_EXECUTABLE)
 
 # This test tries to see if static destructors are called
@@ -177,26 +206,39 @@ include $(BUILD_EXECUTABLE)
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := bionic/libdlclosetest1.cpp
 LOCAL_MODULE := libdlclosetest1
-LOCAL_PRELINK_MODULE := false
+
+LOCAL_MODULE_TAGS := tests
+include $(BUILD_SHARED_LIBRARY)
+
+# And this one does the same with __attribute__((constructor))
+# and __attribute__((destructor))
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES := bionic/libdlclosetest2.c
+LOCAL_MODULE := libdlclosetest2
+
+LOCAL_MODULE_TAGS := tests
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := bionic/test_dlclose_destruction.c
 LOCAL_MODULE := test_dlclose_destruction
 LOCAL_LDFLAGS := -ldl
-#LOCAL_SHARED_LIBRARIES := libdlclosetest1
+#LOCAL_SHARED_LIBRARIES := libdlclosetest1 libdlclosetest2
+LOCAL_MODULE_TAGS := tests
 include $(BUILD_EXECUTABLE)
 
 # Testing 'clone' is only possible on Linux systems
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := common/test_clone.c
 LOCAL_MODULE := test_clone
+LOCAL_MODULE_TAGS := tests
 include $(BUILD_EXECUTABLE)
 
 ifeq ($(HOST_OS),linux)
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := common/test_clone.c
 LOCAL_MODULE := test_clone
+LOCAL_MODULE_TAGS := tests
 include $(BUILD_HOST_EXECUTABLE)
 endif
 

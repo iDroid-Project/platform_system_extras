@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#ifndef _ALLOCATE_H_
+#define _ALLOCATE_H_
+
 #define EXT4_ALLOCATE_FAILED (u32)(~0)
 
 #include "ext4_utils.h"
@@ -38,6 +41,7 @@ u32 get_free_inodes(u32 bg);
 u32 reserve_inodes(int bg, u32 inodes);
 void add_directory(u32 inode);
 u16 get_directories(int bg);
+void init_unused_inode_tables(void);
 u32 allocate_inode();
 void free_alloc(struct block_allocation *alloc);
 int reserve_oob_blocks(struct block_allocation *alloc, int blocks);
@@ -49,3 +53,5 @@ void append_region(struct block_allocation *alloc,
 	u32 block, u32 len, int bg);
 struct block_allocation *create_allocation();
 int append_oob_allocation(struct block_allocation *alloc, u32 len);
+
+#endif

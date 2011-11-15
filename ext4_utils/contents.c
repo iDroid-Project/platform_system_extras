@@ -39,6 +39,11 @@ static u32 dentry_size(u32 entries, struct dentry *dentries)
 		len += dentry_len;
 	}
 
+	/* include size of the dentry used to pad until the end of the block */
+	if (len % info.block_size + 8 > info.block_size)
+		len += info.block_size - (len % info.block_size);
+	len += 8;
+
 	return len;
 }
 
@@ -51,7 +56,7 @@ static struct ext4_dir_entry_2 *add_dentry(u8 *data, u32 *offset,
 	struct ext4_dir_entry_2 *dentry;
 
 	u32 start_block = *offset / info.block_size;
-	u32 end_block = (*offset + rec_len) / info.block_size;
+	u32 end_block = (*offset + rec_len - 1) / info.block_size;
 	if (start_block != end_block) {
 		/* Adding this dentry will cross a block boundary, so pad the previous
 		   dentry to the block boundary */
@@ -115,7 +120,7 @@ u32 make_directory(u32 dir_inode_num, u32 entries, struct dentry *dentries,
 
 	data = inode_allocate_data_extents(inode, len, len);
 	if (data == NULL) {
-		error("failed to allocate %llu extents", len);
+		error("failed to allocate %u extents", len);
 		return EXT4_ALLOCATE_FAILED;
 	}
 

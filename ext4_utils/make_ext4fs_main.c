@@ -33,7 +33,7 @@ static void usage(char *path)
         fprintf(stderr, "%s [ -l <len> ] [ -j <journal size> ] [ -b <block_size> ]\n", basename(path));
         fprintf(stderr, "    [ -g <blocks per group> ] [ -i <inodes> ] [ -I <inode size> ]\n");
         fprintf(stderr, "    [ -L <label> ] [ -f ] [ -a <android mountpoint> ]\n");
-        fprintf(stderr, "    [ -z | -s ] [ -J ]\n");
+        fprintf(stderr, "    [ -z | -s ] [ -t ] [ -w ] [ -c ] [ -J ]\n");
         fprintf(stderr, "    <filename> [<directory>]\n");
 }
 
@@ -46,8 +46,11 @@ int main(int argc, char **argv)
         int android = 0;
         int gzip = 0;
         int sparse = 0;
+        int crc = 0;
+        int wipe = 0;
+        int init_itabs = 0;
 
-        while ((opt = getopt(argc, argv, "l:j:b:g:i:I:L:a:fzJs")) != -1) {
+        while ((opt = getopt(argc, argv, "l:j:b:g:i:I:L:a:fwzJsct")) != -1) {
                 switch (opt) {
                 case 'l':
                         info.len = parse_num(optarg);
@@ -77,14 +80,23 @@ int main(int argc, char **argv)
                         android = 1;
                         mountpoint = optarg;
                         break;
+                case 'w':
+                        wipe = 1;
+                        break;
                 case 'z':
                         gzip = 1;
                         break;
 		case 'J':
 			info.no_journal = 1;
 			break;
+		case 'c':
+			crc = 1;
+			break;
                 case 's':
                         sparse = 1;
+                        break;
+                case 't':
+                        init_itabs = 1;
                         break;
                 default: /* '?' */
                         usage(argv[0]);
@@ -97,6 +109,18 @@ int main(int argc, char **argv)
                 usage(argv[0]);
                 exit(EXIT_FAILURE);
 	}
+
+        if (wipe && sparse) {
+                fprintf(stderr, "Cannot specifiy both wipe and sparse\n");
+                usage(argv[0]);
+                exit(EXIT_FAILURE);
+        }
+
+        if (wipe && gzip) {
+                fprintf(stderr, "Cannot specifiy both wipe and gzip\n");
+                usage(argv[0]);
+                exit(EXIT_FAILURE);
+        }
 
         if (optind >= argc) {
                 fprintf(stderr, "Expected filename after options\n");
@@ -115,5 +139,6 @@ int main(int argc, char **argv)
                 exit(EXIT_FAILURE);
         }
 
-        return make_ext4fs(filename, directory, mountpoint, android, gzip, sparse);
+        return make_ext4fs_internal(filename, directory, mountpoint, android, gzip,
+                       sparse, crc, wipe, init_itabs);
 }
